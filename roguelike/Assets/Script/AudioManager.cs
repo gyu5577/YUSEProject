@@ -96,7 +96,7 @@ public class AudioManager : MonoBehaviour
     }
     
     /// <summary>
-    /// 배경 음악 종료 (StopBGM() : void)
+    /// 배경 음악 종료 (StopBGM() : void) 
     /// </summary>
   
     public void StopBGM()
