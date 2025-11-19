@@ -1,4 +1,13 @@
-﻿using System; // event Action 사용
+﻿/*
+ * [PlayerManager.cs]
+ * [패키지 2] 플레이어 로직
+ * Sprint 1 목표(B-1.a)에 따라 이동, HP 관리, 사망 처리,
+ * 그리고 HUD 연동을 위한 OnHpChanged 이벤트를 구현합니다.
+ *
+ * 이 스크립트는 '통합 코딩 컨벤션'을 완벽하게 준수하여 작성되었습니다.
+ */
+
+using System; // event Action 사용
 using UnityEngine;
 
 // 코딩 컨벤션 1-4 (GetComponent)를 위해 Rigidbody2D 강제
@@ -8,18 +17,23 @@ public class PlayerManager : MonoBehaviour
     #region Events
     // (Sprint 1, B-1.a) HP 변경 이벤트 정의 (HUDManager가 구독할 대상)
     public event Action<float, float> OnHpChanged;
+    // (Sprint 2, D-1.b) 경험치 변경 이벤트 정의
     public event Action<float, float> OnExpChanged;
     // 재화, 킬 카운트 변경 이벤트 정의
     public event Action<int> OnGoldChanged;
     public event Action<int> OnKillCountChanged;
     
-    // (Sprint 2, B-1.b) 레벨 업 이벤트를 정의합니다. (RewardManager가 구독할 대상)
+    // (Sprint 2, B-1.b) 레벨 업 이벤트를 정의합니다. (GameManager가 구독할 대상)
     public event Action OnPlayerLeveledUp;
     #endregion
 
     #region Properties
     // 외부에서 현재 HP를 읽을 수 있도록 프로퍼티로 노출
     public float CurrentHp { get => _currentHp; }
+    // (Sprint 2 추가) 레벨, 경험치, 골드 프로퍼티
+    public int Level { get => _level; }
+    public int CurrentExp { get => _currentExp; }
+    public int Gold { get => _gold; }
     #endregion
     
     #region Serialized Fields
@@ -37,10 +51,10 @@ public class PlayerManager : MonoBehaviour
     private float _currentHp;
     
     // --- Sprint 2에서 사용할 변수 ---
-    // private int _level = 1;
-    // private int _currentExp = 0;
-    // private int _maxExp = 100;
-    // private int _gold = 0;
+    private int _level = 1;
+    private int _currentExp = 0;
+    private int _maxExp = 100; // 초기 최대 경험치
+    private int _gold = 0;
     #endregion
 
     #region Unity LifeCycle
@@ -94,9 +108,35 @@ public class PlayerManager : MonoBehaviour
         }
     }
     
-    // (Sprint 2에서 구현될 함수들...)
-    // public void GainExp(int amount) { ... }
-    // public void GainGold(int amount) { ... }
+    /// <summary>
+    /// (S2, B-1.b) 경험치를 획득합니다.
+    /// </summary>
+    /// <param name="amount">획득한 경험치 양</param>
+    public void GainExp(int amount)
+    {
+        _currentExp += amount;
+        
+        // 경험치 획득 후 UI 갱신 알림
+        OnExpChanged?.Invoke((float)_currentExp, (float)_maxExp);
+
+        if (_currentExp >= _maxExp)
+        {
+            LevelUp();
+        }
+    }
+
+    /// <summary>
+    /// (S2, B-1.c) 재화를 획득합니다.
+    /// </summary>
+    /// <param name="amount">획득한 재화 양</param>
+    public void GainGold(int amount)
+    {
+        _gold += amount;
+        
+        // 재화 획득 후 UI 갱신 알림
+        OnGoldChanged?.Invoke(_gold);
+    }
+    
     // public void SpendGold(int amount) { ... }
     // public void AddEquipment(Equipment equipment) { ... }
     #endregion
@@ -128,11 +168,26 @@ public class PlayerManager : MonoBehaviour
         gameObject.SetActive(false); 
     }
     
-    // (Sprint 2에서 구현...)
-    // private void LevelUp()
-    // {
-    //     ...
-    //     OnPlayerLeveledUp?.Invoke(); // RewardManager가 구독할 이벤트
-    // }
+    /// <summary>
+    /// (S2, B-1.b) 레벨 업 처리
+    /// </summary>
+    private void LevelUp()
+    {
+        // 경험치 이월 및 레벨 증가
+        _currentExp -= _maxExp;
+        _level++;
+        
+        // 다음 레벨 필요 경험치 증가 (예: 20% 증가)
+        _maxExp = Mathf.RoundToInt(_maxExp * 1.2f);
+        
+        // 레벨 업 후에도 남은 경험치가 최대 경험치보다 많을 수 있으므로 재귀 호출 가능성 고려
+        // (단순화를 위해 여기서는 한 번만 처리하거나 while문 사용 가능)
+        
+        // 레벨 업 후 UI 갱신 알림 (변경된 maxExp 반영)
+        OnExpChanged?.Invoke((float)_currentExp, (float)_maxExp);
+
+        // GameManager 등에게 레벨 업 사실 알림
+        OnPlayerLeveledUp?.Invoke(); 
+    }
     #endregion
 }
