@@ -16,7 +16,7 @@ public class CodexManager : MonoBehaviour
 
     #region Button Action
 
-    //ui tabÅ° ±¸Çö
+    //ui tabí‚¤ êµ¬í˜„
     public void OpenPanel(GameObject targetPanel)
     {
         foreach (GameObject panel in allCodexPanels)

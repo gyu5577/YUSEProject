@@ -18,13 +18,13 @@ public class SettingManager : MonoBehaviour
 
     #region private
     [Header("--UI Component--")]
-    [SerializeField] private TMP_Dropdown resolutionDropdown; // ÇØ»óµµ ¸ñ·Ï
-    [SerializeField] private Toggle fullScreenToggle;         // ÀüÃ¼È­¸é Ã¼Å©¹Ú½º
+    [SerializeField] private TMP_Dropdown resolutionDropdown; // í•´ìƒë„ ëª©ë¡
+    [SerializeField] private Toggle fullScreenToggle;         // ì „ì²´í™”ë©´ ì²´í¬ë°•ìŠ¤
     [SerializeField] private Slider masterSlider;
     [SerializeField] private Slider bgmSlider;
     [SerializeField] private Slider sfxSlider;
 
-    //ÀÓ½Ãº¯¼ö 
+    //ì„ì‹œë³€ìˆ˜ 
     private int resolutionIndex;
     private bool isFullScreen;
 
@@ -68,29 +68,29 @@ public class SettingManager : MonoBehaviour
 
 
 
-    //Ã³À½ ½ÃÀÛÇÒ¶§ Á¸ÀçÇÏ´Â ÇØ»óµµ ¸ÂÃçÁÖ´Â ÇÔ¼ö
+    //ì²˜ìŒ ì‹œì‘í• ë•Œ ì¡´ì¬í•˜ëŠ” í•´ìƒë„ ë§ì¶°ì£¼ëŠ” í•¨ìˆ˜
     private void Init_Resolution()
     {
-        //ÃÊ±âÈ­ 
+        //ì´ˆê¸°í™” 
         targetResolution.Clear();
         resolutionDropdown.ClearOptions();
 
-        //ÀÓ½ÃÀúÀå¿ë
+        //ì„ì‹œì €ì¥ìš©
         List<string> options = new List<string>();
 
-        //È­¸é °ü¸®ÀÚ·ÎºÎÅÍ Áö¿øÇÏ´Â ÇØ»óµµ ¹Ş¾Æ¿À±â
+        //í™”ë©´ ê´€ë¦¬ìë¡œë¶€í„° ì§€ì›í•˜ëŠ” í•´ìƒë„ ë°›ì•„ì˜¤ê¸°
         Resolution[] allResolutions = Screen.resolutions;
 
         int currentResolutionIndex = 0;
 
-        // ¹Ş¾Æ¿ÂÇØ»óµµ ºĞ¸®ÇØ¼­ ³Ö±â
+        // ë°›ì•„ì˜¨í•´ìƒë„ ë¶„ë¦¬í•´ì„œ ë„£ê¸°
         for (int i = 0; i < allResolutions.Length; i++)
         {
             Resolution res = allResolutions[i];
 
             string option = res.width + "x" + res.height;
 
-            //Áßº¹Á¦°Å
+            //ì¤‘ë³µì œê±°
             if (!options.Contains(option))
             {
                 options.Add(option);
@@ -98,10 +98,10 @@ public class SettingManager : MonoBehaviour
             }
         }
 
-        //optionÄ­ Ã¤¿ì±â
+        //optionì¹¸ ì±„ìš°ê¸°
         resolutionDropdown.AddOptions(options);
 
-        // ÇöÀç ÇØ»óµµ ¼±ÅÃÇØµÎ±â
+        // í˜„ì¬ í•´ìƒë„ ì„ íƒí•´ë‘ê¸°
 
         for (int i = 0; i < targetResolution.Count; i++)
         {
@@ -114,10 +114,10 @@ public class SettingManager : MonoBehaviour
         resolutionDropdown.value = currentResolutionIndex;
         resolutionDropdown.RefreshShownValue();
 
-        //ÀüÃ¼ È­¸é Åä±Û »óÅÂ ¸ÂÃß±â
+        //ì „ì²´ í™”ë©´ í† ê¸€ ìƒíƒœ ë§ì¶”ê¸°
         fullScreenToggle.isOn = Screen.fullScreen;
 
-        //½ÃÀÛÇÒ¶§ ÃÊ±âÈ­ ÇØÁà¾ßÇÔ ÀÓ½Ãº¯¼ö
+        //ì‹œì‘í• ë•Œ ì´ˆê¸°í™” í•´ì¤˜ì•¼í•¨ ì„ì‹œë³€ìˆ˜
         resolutionIndex = currentResolutionIndex;
         isFullScreen = Screen.fullScreen;
     }
