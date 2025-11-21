@@ -19,6 +19,7 @@ public class CodexManager : MonoBehaviour
     //ui tab키 구현
     public void OpenPanel(GameObject targetPanel)
     {
+        AudioManager.Instance.PlaySfx("Select");
         foreach (GameObject panel in allCodexPanels)
         {
             if(panel==targetPanel)

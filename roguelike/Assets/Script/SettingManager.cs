@@ -8,10 +8,6 @@ public class SettingManager : MonoBehaviour
 
     #region public
     [Header("--Data Field--")]
-    public float masterVolume;
-    public float sfxVolume;
-    public float bgmVolume;
-
     #endregion
 
 
@@ -35,6 +31,8 @@ public class SettingManager : MonoBehaviour
     void Start()
     {
         Init_Resolution();
+        // 오디오 볼륨설정 초기화, 이벤트 연결 함수 호출
+        Init_VolumeSettings();
     }
 
 
@@ -122,5 +120,29 @@ public class SettingManager : MonoBehaviour
         isFullScreen = Screen.fullScreen;
     }
 
- 
-}
+    private void Init_VolumeSettings()
+    {
+        if (AudioManager.Instance != null)
+        {
+            // 슬라이더 초기값 설정
+            masterSlider.value = AudioManager.Instance.MasterVolume;
+            bgmSlider.value = AudioManager.Instance.BgmVolume;    
+            sfxSlider.value = AudioManager.Instance.SfxVolume;     
+            
+            // 초기값으로 음향 설정
+            AudioManager.Instance.SetMasterVolume(masterSlider.value);
+            AudioManager.Instance.SetBgmVolume(bgmSlider.value);
+            AudioManager.Instance.SetSfxVolume(sfxSlider.value);
+        
+            // 리스너 연결
+            masterSlider.onValueChanged.AddListener(AudioManager.Instance.SetMasterVolume);
+            bgmSlider.onValueChanged.AddListener(AudioManager.Instance.SetBgmVolume);
+            sfxSlider.onValueChanged.AddListener(AudioManager.Instance.SetSfxVolume);
+            
+        }
+        else
+        {
+            Debug.LogError("AudioManager 인스턴스를 찾을 수 없습니다.");
+        }
+    }
+}   

@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic; //딕셔너리 사용을 위해 추가
 
 public class AudioManager : MonoBehaviour
 {
@@ -13,11 +14,16 @@ public class AudioManager : MonoBehaviour
     [Header("Clips")]
     [SerializeField] private AudioClip[] bgmClips; 
     [SerializeField] private AudioClip[] sfxClips;
+    private Dictionary<string, AudioClip> bgmDictionary = new Dictionary<string, AudioClip>();
+    private Dictionary<string, AudioClip> sfxDictionary = new Dictionary<string, AudioClip>();
     // 음악, 효과음 볼륨
     [Header("Volume")]
     [SerializeField] private float masterVolume = 1.0f;
     [SerializeField] private float bgmVolume = 1.0f;
     [SerializeField] private float sfxVolume = 1.0f;
+    public float MasterVolume => masterVolume;
+    public float BgmVolume => bgmVolume;
+    public float SfxVolume => sfxVolume;
     #endregion
     
     #region Unity LifeCycle
@@ -30,6 +36,8 @@ public class AudioManager : MonoBehaviour
             //볼륨 기본값 설정 (추후 저장된 볼륨사용기능?)
             if (bgmSource != null) bgmSource.volume = bgmVolume;
             if (sfxSource != null) sfxSource.volume = sfxVolume;
+            //딕셔너리 초기화
+            InitializeAudioDictionary();
         }
         else
         {
@@ -40,21 +48,37 @@ public class AudioManager : MonoBehaviour
     
     #region Public methods
     /// <summary>
+    /// 배열 딕셔너리 변환 (InitializeAudioKictionary() : void)
+    /// </summary>
+    private void InitializeAudioDictionary()
+    {
+        // BGM 클립 초기화
+        foreach (var clip in bgmClips)
+        {
+            if (clip != null && !bgmDictionary.ContainsKey(clip.name))
+            {
+                bgmDictionary.Add(clip.name, clip);
+            }
+        }
+        
+        // SFX 클립 초기화
+        foreach (var clip in sfxClips)
+        {
+            if (clip != null && !sfxDictionary.ContainsKey(clip.name))
+            {
+                sfxDictionary.Add(clip.name, clip);
+            }
+        }
+    }
+    /// <summary>
     /// 배경 음악 재생 (PlayBGM(clipName: string) : void)
     /// </summary>
     public void PlayBGM(string clipName)
     {
-        AudioClip targetClip = null;
-        foreach (var clip in bgmClips)
-        {
-            if (clip != null && clip.name == clipName)
-            {
-                targetClip = clip;
-                break;
-            }
-        }
-
-        if (targetClip != null)
+        AudioClip targetClip;
+        
+        // 💡 Dictionary를 사용하여 반복문 없이 클립 검색
+        if (bgmDictionary.TryGetValue(clipName, out targetClip))
         {
             if (bgmSource.isPlaying)
             {
@@ -75,17 +99,10 @@ public class AudioManager : MonoBehaviour
     /// </summary>
     public void PlaySfx(string clipName)
     {
-        AudioClip targetClip = null;
-        foreach (var clip in sfxClips)
-        {
-            if (clip != null && clip.name == clipName)
-            {
-                targetClip = clip;
-                break; 
-            }
-        }
-
-        if (targetClip != null)
+        AudioClip targetClip;
+        
+        // 💡 Dictionary를 사용하여 반복문 없이 클립 검색
+        if (sfxDictionary.TryGetValue(clipName, out targetClip))
         {
             sfxSource.PlayOneShot(targetClip);
         }

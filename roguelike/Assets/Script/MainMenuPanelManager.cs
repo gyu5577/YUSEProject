@@ -4,7 +4,7 @@ using System.Collections;
 public class MainMenuPanelManager : MonoBehaviour
 {
     #region Panel
-    [Header("Panel ¹× text º¯¼ö")]
+    [Header("Panel ï¿½ï¿½ text ï¿½ï¿½ï¿½ï¿½")]
     public GameObject MainPanel;
     public GameObject LobbyPanel;
     public GameObject UpgradePanel;
@@ -19,7 +19,7 @@ public class MainMenuPanelManager : MonoBehaviour
     #region life Cycle
     void Start()
     {
-        
+        AudioManager.Instance.PlayBGM("BGM");
     }
 
     // Update is called once per frame
@@ -29,13 +29,13 @@ public class MainMenuPanelManager : MonoBehaviour
         if (press_Anykey == null) return;
         float newAlpha = AlphaChange();
         BlinkText(newAlpha);
-
+        
         ShowLobbyPanel();
     }
     #endregion
 
     #region Button Action
-    //¾Æ¹«Å°³ª ´©¸£¸é ·Îºñ·Î ³Ñ¾î°¡±â
+    //ï¿½Æ¹ï¿½Å°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Îºï¿½ï¿½ ï¿½Ñ¾î°¡ï¿½ï¿½
     public void ShowLobbyPanel()
     {
         if(Input.anyKeyDown && MainPanel.activeSelf && !LobbyPanel.activeSelf)
@@ -45,36 +45,39 @@ public class MainMenuPanelManager : MonoBehaviour
         }
     }
 
-    //°­È­ ÆÐ³Î Åä±Û
+    //ï¿½ï¿½È­ ï¿½Ð³ï¿½ ï¿½ï¿½ï¿½
     public void ToggleUpgradePanel()
-    {
+    { 
+        AudioManager.Instance.PlaySfx("Select");
        UpgradePanel.SetActive(!UpgradePanel.activeSelf);
     }
 
     
-    //¿É¼Ç ÆÐ³Î Åä±Û
+    //ï¿½É¼ï¿½ ï¿½Ð³ï¿½ ï¿½ï¿½ï¿½
     public void ToggleOptionPanel()
     {
+        AudioManager.Instance.PlaySfx("Select");
         OptionPanel.SetActive(!OptionPanel.activeSelf);  
     }
 
-    // µµ°¨ ÆÐ³Î Åä±Û
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½ ï¿½ï¿½ï¿½
     public void ToggleCodexPanel()
     {
+        AudioManager.Instance.PlaySfx("Select");
         CodexPanel.SetActive(!CodexPanel.activeSelf);
     }
     #endregion
 
 
     #region Title Blink method
-    //text blink ÇÔ¼ö
+    //text blink ï¿½Ô¼ï¿½
     private float AlphaChange()
     {
         float normalizedAlpha = Mathf.PingPong(Time.time * 0.5f, 1f);  
         return normalizedAlpha;
     }
 
-    //¾ËÆÄ°ª ¹Ù²ãÁÖ´Â ÇÔ¼ö
+    //ï¿½ï¿½ï¿½Ä°ï¿½ ï¿½Ù²ï¿½ï¿½Ö´ï¿½ ï¿½Ô¼ï¿½
     private void BlinkText(float alpha)
     {
         Color newColor = press_Anykey.color;
