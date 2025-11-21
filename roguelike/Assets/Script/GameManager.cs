@@ -301,7 +301,7 @@ public class GameManager : MonoBehaviour
         yield return null;
         // 2. 인게임 씬이 로드되었으므로 상태 초기화
         _currentState = GameState.Playing;
-        _gameTime = 0f;
+        _gameTime = 0f; 
             
         // 3. (컨벤션 1-1 예외) 씬 내의 매니저들을 "찾아서" 연결합니다.
         // DontDestroyOnLoad 객체는 인스펙터 참조가 씬 전환 시 끊기므로,
