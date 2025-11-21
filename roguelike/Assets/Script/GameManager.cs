@@ -47,6 +47,7 @@ public class GameManager : MonoBehaviour
     private PlayerManager _playerManager;
     private RewardManager _rewardManager;
     private InGamePanelManager _inGamePanelManager;
+    private InputManager _inputManager; 
     #endregion
 
     #region Private Fields
@@ -101,6 +102,7 @@ public class GameManager : MonoBehaviour
             // (S1, D-1.b) HUDManager(타이머)에 방송
             OnTimeChanged?.Invoke(_gameTime);
         }
+        
     }
 
     // (중요) 오브젝트 파괴 시 구독한 이벤트를 해제하여 메모리 누수를 방지함
@@ -128,10 +130,13 @@ public class GameManager : MonoBehaviour
         _currentState = GameState.Paused;
         Time.timeScale = 0f; // (중요) 게임 시간을 멈춤
         OnGameStateChanged?.Invoke(_currentState);
-
+        
         // (SDS 4, Diagram 2) 일시정지 패널 표시
-        if(_inGamePanelManager != null)
+        if (_inGamePanelManager != null)
+        {
             _inGamePanelManager.ShowPausePanel(true);
+        }
+            
     }
 
     /// <summary>
@@ -150,6 +155,22 @@ public class GameManager : MonoBehaviour
             _inGamePanelManager.ShowPausePanel(false);
         // (보상 패널은 RewardManager가 직접 닫도록 합니다)
     }
+    
+    /// <summary>
+    /// Pause, Resume 토글 함수
+    /// </summary>
+    private void HandlePauseInput()
+    {
+        if (_currentState == GameState.Playing)
+        {
+            PauseGame();
+        }
+        else if (_currentState == GameState.Paused)
+        {
+            ResumeGame();
+        }
+    }   
+    
 
     /// <summary>
     /// (S3, A-2.b) PlayerManager가 Die()에서 호출합니다.
@@ -265,37 +286,47 @@ public class GameManager : MonoBehaviour
         UnsubscribeInGameEvents();
 
         if (scene.name == IN_GAME_SCENE)
-        {
-            // 2. 인게임 씬이 로드되었으므로 상태 초기화
-            _currentState = GameState.Playing;
-            _gameTime = 0f;
-
-            // 3. (컨벤션 1-1 예외) 씬 내의 매니저들을 "찾아서" 연결합니다.
-            // DontDestroyOnLoad 객체는 인스펙터 참조가 씬 전환 시 끊기므로,
-            // 씬 로드 시점에 FindAnyObjectByType(FindObjectOfType은 Obsolete 되었음!)을 사용하는 것이 유일한 방법입니다.
-            // 단, 성능에 민감한 게임에서는 이 방법을 권장하지 않습니다.
-            _playerManager = FindAnyObjectByType<PlayerManager>();
-            _rewardManager = FindAnyObjectByType<RewardManager>();
-            _inGamePanelManager = FindAnyObjectByType<InGamePanelManager>();
-
-            // 4. (안전 장치)
-            if (_playerManager == null || _rewardManager == null || _inGamePanelManager == null)
-            {
-                Debug.LogError("GameManager: InGameScene에서 필수 매니저(Player, Reward, InGamePanel)를 찾을 수 없습니다!");
-            }
-            
-            // 5. 씬 내부 매니저들의 이벤트를 "구독"합니다.
-            if(_playerManager != null)
-                _playerManager.OnPlayerLeveledUp += HandlePlayerLeveledUp;
-            
-            if(_rewardManager != null)
-                _rewardManager.OnRewardProcessFinished += HandleRewardFinished;
+        {  
+            StartCoroutine(InitializeInGameManagers());
         }
         else if (scene.name == MAIN_MENU_SCENE)
         {
             // 1. 메인 메뉴 씬이 로드됨
             _currentState = GameState.Paused;
         }
+    }
+    
+    private System.Collections.IEnumerator InitializeInGameManagers()
+    {
+        yield return null;
+        // 2. 인게임 씬이 로드되었으므로 상태 초기화
+        _currentState = GameState.Playing;
+        _gameTime = 0f;
+            
+        // 3. (컨벤션 1-1 예외) 씬 내의 매니저들을 "찾아서" 연결합니다.
+        // DontDestroyOnLoad 객체는 인스펙터 참조가 씬 전환 시 끊기므로,
+        // 씬 로드 시점에 FindAnyObjectByType(FindObjectOfType은 Obsolete 되었음!)을 사용하는 것이 유일한 방법입니다.
+        // 단, 성능에 민감한 게임에서는 이 방법을 권장하지 않습니다.
+        _playerManager = FindAnyObjectByType<PlayerManager>();
+        _rewardManager = FindAnyObjectByType<RewardManager>();
+        _inGamePanelManager = FindAnyObjectByType<InGamePanelManager>();
+        _inputManager = FindAnyObjectByType<InputManager>();
+
+        // 4. (안전 장치)
+        if (_playerManager == null || _rewardManager == null)
+        {
+            Debug.LogError("GameManager: InGameScene에서 필수 매니저(Player, Reward, InGamePanel)를 찾을 수 없습니다!");
+        }
+            
+        // 5. 씬 내부 매니저들의 이벤트를 "구독"합니다.
+        if(_playerManager != null)
+            _playerManager.OnPlayerLeveledUp += HandlePlayerLeveledUp;
+            
+        if(_rewardManager != null)
+            _rewardManager.OnRewardProcessFinished += HandleRewardFinished;
+
+        if (_inputManager != null)
+            _inputManager.OnPausePressed += HandlePauseInput;   
     }
 
     /// <summary>
@@ -312,6 +343,11 @@ public class GameManager : MonoBehaviour
         {
             _rewardManager.OnRewardProcessFinished -= HandleRewardFinished;
         }
+        if (_inputManager != null)
+        {
+            _inputManager.OnPausePressed -= HandlePauseInput;
+        }
+
     }
     #endregion
 }

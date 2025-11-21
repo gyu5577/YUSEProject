@@ -24,6 +24,7 @@ public class InGamePanelManager : MonoBehaviour
     [SerializeField]
     private GameObject gameClearPanel;
     
+    
     // (Sprint 2)
     // [SerializeField] private GameObject settingPanel;
     #endregion
@@ -36,7 +37,9 @@ public class InGamePanelManager : MonoBehaviour
     {
         Debug.Log("InGamePanelManager: 일시정지 패널 " + (show ? "표시" : "숨김"));
         if (pausePanel != null)
+        {
             pausePanel.SetActive(show);
+        }
     }
 
     /// <summary>
