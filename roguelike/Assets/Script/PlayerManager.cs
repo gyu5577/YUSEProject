@@ -40,6 +40,8 @@ public class PlayerManager : MonoBehaviour
     [Header("Dependencies (Required)")]
     [SerializeField]
     private InputManager inputManager;
+    [SerializeField]
+    private ItemManager itemManager;
     
     [Header("Stats")]
     [SerializeField]
@@ -72,6 +74,15 @@ public class PlayerManager : MonoBehaviour
         {
             Debug.LogError("PlayerManager: InputManager가 인스펙터에 할당되지 않았습니다!");
         }
+        // ItemManager의 초기화를 PlayerManager가 대신 처리합니다.
+        if (itemManager != null && inputManager != null)
+        {
+            itemManager.Initialize(inputManager);
+        }
+        else
+        {
+            Debug.LogError("PlayerManager: ItemManager 또는 InputManager 참조가 없어 ItemManager를 초기화할 수 없습니다.");
+        }
     }
 
     // 물리 업데이트는 FixedUpdate에서 처리
@@ -84,6 +95,21 @@ public class PlayerManager : MonoBehaviour
         );
 
         Move(moveInput);
+    }
+    
+    /// <summary>
+    /// InputManager로부터 아이템 사용 입력을 받을 때 호출됩니다.
+    /// </summary>
+    private void HandleItemUseInput(int slotNumber)
+    {
+        if (GameManager.Instance.CurrentState != GameState.Playing)
+        {
+            return;
+        }
+        if (itemManager != null)
+        {
+            itemManager.ActivateItem(slotNumber);
+        }
     }
     #endregion
 

@@ -1,4 +1,5 @@
 using System;
+using UnityEditorInternal.Profiling.Memory.Experimental;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -14,6 +15,11 @@ public class InputManager : MonoBehaviour
     /// (S1, A-3.a) 일시정지 키(ESC)가 눌렸을 때 호출됩니다.
     /// </summary>
     public event Action OnPausePressed;
+    
+    /// <summary>
+    /// 아이템 슬롯(1, 2, 3) 키가 눌렸을 때 호출됩니다.
+    /// </summary>
+    public event Action<int> GetItemUseInput;
     #endregion
 
     #region Private Consts
@@ -31,6 +37,7 @@ public class InputManager : MonoBehaviour
     [SerializeField] private float mouseYInput;
     [SerializeField] private bool jumpInput;
     [SerializeField] private bool pauseInput;
+    [SerializeField] private int useItemInput;
     #endregion
 
     #region Properties
@@ -40,6 +47,7 @@ public class InputManager : MonoBehaviour
     public float MouseYValue => mouseYInput;
     public bool JumpTriggered => jumpInput;
     public bool PausePressed => pauseInput;
+    public int UseItemTriggered => useItemInput;
     #endregion
 
     #region Unity LifeCycle
@@ -66,6 +74,7 @@ public class InputManager : MonoBehaviour
         mouseXInput = 0f;
         mouseYInput = 0f;
         pauseInput = false;
+        useItemInput = 0;
     }
     
     public void ProcessInput()
@@ -76,7 +85,16 @@ public class InputManager : MonoBehaviour
         mouseXInput = Input.GetAxis(MOUSE_X);
         mouseYInput = Input.GetAxis(MOUSE_Y);
         pauseInput = Input.GetKeyDown(KeyCode.Escape);
-        
+       
+        // Item키 입력 상태 저장
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+            useItemInput = 1;
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+            useItemInput = 2;
+        else if (Input.GetKeyDown(KeyCode.Alpha3))
+            useItemInput = 3;
+        else
+            useItemInput = 0;
         // --- 이벤트 방송 ---
         
         // 1. 이동 방송 (매 프레임)
@@ -87,7 +105,11 @@ public class InputManager : MonoBehaviour
         {
             OnPausePressed?.Invoke();
         }
-        // ------------------------------
+        // 3. ---------------------------
+        if (useItemInput != 0)
+        {
+            GetItemUseInput?.Invoke(useItemInput);
+        }
     }
 
     public bool IsKeyPressed(KeyCode keyCode) => Input.GetKey(keyCode);
