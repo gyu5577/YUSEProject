@@ -218,5 +218,13 @@ public class PlayerManager : MonoBehaviour
         // GameManager 등에게 레벨 업 사실 알림
         OnPlayerLeveledUp?.Invoke(); 
     }
+
+    /// <summary>
+    /// 장비 선택 시 호출되는 더미 함수
+    /// </summary>
+    public void AddEquipment(Equipment data) 
+    {
+    
+    }
     #endregion
 }

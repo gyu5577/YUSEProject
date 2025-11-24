@@ -52,6 +52,8 @@ public class HUDManager : MonoBehaviour
         // (S3) [패키지 3]의 이벤트도 구독해야 함
         // SpawnManager.OnBossSpawned += ShowBossHpBar;
         // QuestManager.OnQuestStarted += ToggleQuestInfo;
+
+        InitHUD();
     }
 
     private void OnDestroy()
@@ -129,9 +131,39 @@ public class HUDManager : MonoBehaviour
         if (killCountText != null)
             killCountText.text = amount.ToString();
     }
-    
+
     // (S3, D-1.d)
     // private void ShowBossHpBar(...) { ... }
     // private void ToggleQuestInfo(...) { ... }
+
+    /// <summary>
+    /// HUD 초기화
+    /// </summary>
+    public void InitHUD()
+    {
+        // HP
+        UpdateHpBar(playerManager.CurrentHp, playerManager.CurrentHp);
+
+        // EXP
+        UpdateExpBar(playerManager.CurrentExp, 1);
+
+        // Timer
+        UpdateTimerText(0);
+
+        // Gold
+        UpdateGoldText(playerManager.Gold);
+
+        // Kill Count
+        UpdateKillCountText(0);
+
+        // Boss HP Bar 숨김
+        if (bossHpBarPanel != null)
+            bossHpBarPanel.SetActive(false);
+
+        // Quest 패널 숨김
+        if (questInfoPanel != null)
+            questInfoPanel.SetActive(false);
+
+    }
     #endregion
 }
