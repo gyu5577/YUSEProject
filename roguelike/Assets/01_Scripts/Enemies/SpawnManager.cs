@@ -1,141 +1,203 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Random = UnityEngine.Random;
-
 
 public class SpawnManager : MonoBehaviour
 {
     #region Serialized Fields
+    [Header("References")]
+    [SerializeField] private Transform playerTransform; 
+    // [삭제] poolContainer는 이제 PoolManager가 관리하므로 필요 없음
 
-    [Header("References")] 
-    [SerializeField] private NormalMonster normalMonsterPrefab; // 생성할 프리팹
-    [SerializeField] private Transform playerTransform; // 플레이어 위치 참조
+    [Header("Wave Settings")] 
+    [SerializeField] private List<WaveData> waves;
+    [SerializeField] private BossMonster bossPrefab; 
 
-
-//에디터에서 입력한 값을 우선해서 적용하므로 유의하세요.
-
-//에디터가 아니라 코드로 하려면 에디터 공개 구문 제거하고 코드 안에서만 되도록 하면 됩니다.
-
-    [Header("Settings")] 
-    [SerializeField] private float spawnInterval = 5.0f; // 스폰 주기
-    [SerializeField] private float spawnRadius = 10.0f; // 플레이어 기준 스폰 거리
-    [SerializeField] private int initialPoolSize = 100; //pool 크기
-
+    [Header("Spawn Settings")] 
+    [SerializeField] private float spawnInterval = 5.0f; 
+    [SerializeField] private float spawnRadius = 10.0f;
+    [SerializeField] private float bossSpawnCycle = 300f;
+    [SerializeField] private int initialPerTypeSize = 10; 
     #endregion
 
     #region Private Fields
+    private float _spawnTimer;
+    private WaveData _currentWave;
+    private int _bossLevel = 1;
+    private bool _isBossActive;
 
-    private float _timer;
-
-    // 오브젝트 풀 큐랑, 에디터에서 흩어져 있으면 보기가 곤란하니
-    // 그 밑에다가 담아둘 poolContainer
-    private Queue<Monster> _monsterPool = new Queue<Monster>();
-    private Transform _poolContainer;
-
+    // 현재 필드 몬스터 리스트 (마릿수 제한용)
+    private List<Monster> _activeMonsters = new List<Monster>();
     #endregion
 
-
     #region Unity LifeCycle
-
-    private void Awake()
-
+    private void Start()
     {
-        // 1. 컨테이너 생성 (Hierarchy 정리용)
-        GameObject container = new GameObject("Monster Pool Container");
-        _poolContainer = container.transform;
-
-        // 2. 게임 시작 시 100개 미리 생성 (Pre-warming)
-        PreloadMonsters();
+        if (waves == null || waves.Count == 0)
+        {
+            Debug.LogWarning("SpawnManager: WaveData가 비어있습니다!");
+        }
+        
+        PreloadAllWaveMonsters();
     }
 
     private void Update()
     {
-        UpdateSpawning(Time.time);
-    }
+        if (GameManager.Instance.CurrentState != GameState.Playing) return;
+        if (_isBossActive) return;
 
+        float currentGameTime = GameManager.Instance.GameTime;
+
+        // 1. 보스 스폰 체크
+        if (currentGameTime >= bossSpawnCycle * _bossLevel)
+        {
+            SpawnBoss();
+            return;
+        }
+
+        // 2. 웨이브 데이터 갱신
+        UpdateWaveData(currentGameTime);
+
+        // 3. 몬스터 스폰
+        if (_currentWave != null)
+        {
+            ProcessWaveSpawning();
+        }
+    }
     #endregion
 
-
-    #region Public Methods
-
-    // 시간에 맞는 몬스터 생성 처리 로직을 여기에 추가 하면 됩니다.
-    public void UpdateSpawning(float gameTime)
-
+    #region Wave & Boss Logic
+    // ... (UpdateWaveData, ProcessWaveSpawning, GetRandomPrefab, SpawnBoss 등은 로직 변경 없음) ...
+    
+    private void UpdateWaveData(float time)
     {
-        _timer += Time.deltaTime;
-
-        if (_timer >= spawnInterval)
+        if (_currentWave != null && time >= _currentWave.startTime && time < _currentWave.endTime) return;
+        foreach (var wave in waves)
         {
-            Vector2 spawnPos = CalculateSpawnPosition();
-            SpawnMonster(normalMonsterPrefab, spawnPos);
-            _timer = 0f;
+            if (time >= wave.startTime && time < wave.endTime)
+            {
+                _currentWave = wave;
+                return;
+            }
         }
     }
 
+    private void ProcessWaveSpawning()
+    {
+        _spawnTimer += Time.deltaTime;
+        if (_spawnTimer >= _currentWave.spawnInterval)
+        {
+            if (_activeMonsters.Count < _currentWave.maxFieldMonsterCount)
+            {
+                Monster prefabToSpawn = GetRandomPrefab();
+                if (prefabToSpawn != null)
+                {
+                    Vector2 pos = CalculateSpawnPosition();
+                    SpawnMonster(prefabToSpawn, pos);
+                }
+            }
+            _spawnTimer = 0f;
+        }
+    }
 
+    private Monster GetRandomPrefab()
+    {
+        if (_currentWave.spawnablePrefabs.Count == 0) return null;
+        int idx = Random.Range(0, _currentWave.spawnablePrefabs.Count);
+        return _currentWave.spawnablePrefabs[idx];
+    }
+
+    private void SpawnBoss()
+    {
+        _isBossActive = true;
+        GameManager.Instance.IsTimerStopped = true;
+
+        Vector2 spawnPos = CalculateSpawnPosition();
+        BossMonster boss = Instantiate(bossPrefab, spawnPos, Quaternion.identity);
+        boss.Init(playerTransform, OnBossDied);
+
+        Debug.Log($"BOSS APPEARED! Level: {_bossLevel}");
+    }
+
+    private void OnBossDied(Monster boss)
+    {
+        Debug.Log("BOSS DEFEATED!");
+        _isBossActive = false;
+        _bossLevel++; 
+        GameManager.Instance.IsTimerStopped = false;
+        Destroy(boss.gameObject);
+    }
+    #endregion
+
+    #region Object Pooling Logic (Delegated to PoolManager)
+    
     public void SpawnMonster(Monster prefab, Vector2 position)
-
     {
-        Monster monster = null;
+        // 1. PoolManager에게 GameObject 요청
+        GameObject obj = PoolManager.Instance.Get(prefab.gameObject, position, Quaternion.identity);
+        
+        // 2. Monster 컴포넌트 가져오기
+        Monster monster = obj.GetComponent<Monster>();
 
-        // 1. 풀에 사용 가능한 몬스터가 있는지 확인
-        if (_monsterPool.Count > 0)
-        {
-            monster = _monsterPool.Dequeue();
-        }
-        else
-        {
-            // 2. 없으면 새로 생성 (Instantiate)
-            monster = CreateNewMonster(prefab);
-        }
+        // 3. 초기화 (콜백에서 prefab 정보를 캡처해서 넘겨줌)
+        monster.Init(playerTransform, (m) => ReturnToPool(m, prefab));
 
-        // 3. 위치 설정 및 활성화
-        monster.transform.position = position;
-        monster.gameObject.SetActive(true);
-
-
-        // 4. 초기화 (플레이어 위치 + 사망 시 풀로 돌아오는 콜백 전달)
-        // ReturnToPool 메서드를 몬스터에게 알리기
-        monster.Init(playerTransform, ReturnToPool);
+        // 4. 활성 리스트에 추가
+        _activeMonsters.Add(monster);
     }
 
-
-    // 몬스터가 죽었을 때 호출되어 풀로 반환
-    public void ReturnToPool(Monster monster)
+    public void ReturnToPool(Monster monster, Monster prefab)
     {
-        monster.gameObject.SetActive(false); // 비활성화
-        _monsterPool.Enqueue(monster); // 큐에 반환
+        // 1. 활성 리스트에서 제거
+        _activeMonsters.Remove(monster);
+        
+        // 2. PoolManager에게 반환 요청
+        PoolManager.Instance.ReturnToPool(monster.gameObject, prefab.gameObject);
     }
+    
+    private void PreloadAllWaveMonsters()
+    {
+        // 중복 방지 (Instance ID 사용)
+        HashSet<int> processedIDs = new HashSet<int>();
 
+        foreach (var wave in waves)
+        {
+            // 1. waveData 객체 자체가 null인지 확인합니다.
+            if (wave == null)
+            {
+                Debug.LogWarning("SpawnManager: Waves 리스트에 할당되지 않은 빈 슬롯(Null)이 있습니다. 건너뜁니다.");
+                continue;
+            }
+                
+            // 2. spawnablePrefabs 리스트 자체가 null인지 확인합니다.
+            if (wave.spawnablePrefabs == null)
+            {
+                Debug.LogWarning($"SpawnManager: '{wave.name}' WaveData의 spawnablePrefabs 리스트가 Null입니다. 인스펙터에서 초기화하거나 몬스터를 할당해주세요. 건너뜁니다.");
+                continue;
+            }
+            
+            foreach (var prefab in wave.spawnablePrefabs)
+            {
+                if (prefab == null)
+                {
+                    continue;
+                }
+                
+                int id = prefab.gameObject.GetInstanceID();
+                if (processedIDs.Contains(id)) continue; 
 
-    // 몬스터 생성 위치 계산 화면 밖 랜덤
+                // PoolManager에게 미리 생성 요청
+                PoolManager.Instance.Preload(prefab.gameObject, initialPerTypeSize);
+                
+                processedIDs.Add(id);
+            }
+        }
+    }
+    
     public Vector2 CalculateSpawnPosition()
     {
         Vector2 randomDir = Random.insideUnitCircle.normalized;
         Vector2 origin = playerTransform != null ? (Vector2)playerTransform.position : Vector2.zero;
-
         return origin + (randomDir * spawnRadius);
     }
-
-    // 초기 100개 미리 만들기
-    private void PreloadMonsters()
-    {
-        for (int i = 0; i < initialPoolSize; i++)
-        {
-            Monster monster = CreateNewMonster(normalMonsterPrefab);
-            monster.gameObject.SetActive(false); // 미리 만들어두고 꺼두기
-            _monsterPool.Enqueue(monster); // 큐에 넣기
-        }
-    }
-
-    // 몬스터 생성
-    private Monster CreateNewMonster(Monster prefab)
-    {
-        Monster monster = Instantiate(prefab, _poolContainer); // 컨테이너 자식으로 생성
-
-        return monster;
-    }
-
     #endregion
 }

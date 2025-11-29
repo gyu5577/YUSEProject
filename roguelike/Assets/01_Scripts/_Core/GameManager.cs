@@ -19,11 +19,14 @@ public enum GameState
 public class GameManager : MonoBehaviour
 {
     #region Singleton
+
     // 씬을 넘나드는 싱글톤 구현
     public static GameManager Instance { get; private set; }
+
     #endregion
 
     #region Events
+
     // (컨벤션 1-3) UI가 구독할 이벤트
     /// <summary>
     /// (S1, D-1.b) 게임 시간이 변경될 때 HUDManager(타이머)에 알립니다. (현재 시간)
@@ -34,35 +37,53 @@ public class GameManager : MonoBehaviour
     /// (S2, D-2.a) 게임 상태(Paused, Playing 등)가 변경될 때 UI에 알립니다.
     /// </summary>
     public event Action<GameState> OnGameStateChanged;
+
     #endregion
 
     #region Properties
+
     // (A-2.a) 외부에서 현재 상태를 읽을 수 있도록 프로퍼티 제공
-    public GameState CurrentState { get => _currentState; }
+    public GameState CurrentState
+    {
+        get => _currentState;
+    }
 
 
     public PlayerManager Player => _playerManager;
-    public float GameTime { get => _gameTime; }
+
+    public float GameTime
+    {
+        get => _gameTime;
+    }
+
+    //타이머 만 멈추고 나머지는 진행시키는게 필요할 수도 있어서 미리추가
+    public bool IsTimerStopped { get; set; } = false;
+
     #endregion
 
     #region Cached Scene Dependencies
+
     // (컨벤션 1-1 예외)
     private PlayerManager _playerManager;
     private RewardManager _rewardManager;
     private InGamePanelManager _inGamePanelManager;
-    private InputManager _inputManager; 
+    private InputManager _inputManager;
+
     #endregion
 
     #region Private Fields
+
     private GameState _currentState;
     private float _gameTime;
-    
+
     // (S2, A-2.c) 씬 이름을 상수로 관리 (컨벤션 2 "매직 넘버" 금지)
     private const string MAIN_MENU_SCENE = "MainMenuScene";
     private const string IN_GAME_SCENE = "InGameScene";
+
     #endregion
 
     #region Unity LifeCycle
+
     private void Awake()
     {
         // --- 씬을 넘나드는 싱글톤 구현 ---
@@ -76,7 +97,7 @@ public class GameManager : MonoBehaviour
 
             // 씬이 로드될 때마다 OnSceneLoaded 함수를 호출하도록 구독
             SceneManager.sceneLoaded += OnSceneLoaded;
-            
+
             Application.targetFrameRate = 60;
         }
         else
@@ -99,13 +120,12 @@ public class GameManager : MonoBehaviour
     private void Update()
     {
         // (S1, A-2.a) 게임 상태가 Playing일 때만 시간 추적
-        if (_currentState == GameState.Playing)
+        if (_currentState == GameState.Playing && !IsTimerStopped)
         {
             _gameTime += Time.deltaTime;
             // (S1, D-1.b) HUDManager(타이머)에 방송
             OnTimeChanged?.Invoke(_gameTime);
         }
-        
     }
 
     // (중요) 오브젝트 파괴 시 구독한 이벤트를 해제하여 메모리 누수를 방지함
@@ -115,14 +135,16 @@ public class GameManager : MonoBehaviour
         if (Instance == this)
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
-            
+
             // 인게임 이벤트 구독 해제
             UnsubscribeInGameEvents();
         }
     }
+
     #endregion
 
     #region Public Methods
+
     /// <summary>
     /// (S2, B-4) RewardManager 또는 InputManager가 호출합니다.
     /// </summary>
@@ -133,13 +155,12 @@ public class GameManager : MonoBehaviour
         _currentState = GameState.Paused;
         Time.timeScale = 0f; // (중요) 게임 시간을 멈춤
         OnGameStateChanged?.Invoke(_currentState);
-        
+
         // (SDS 4, Diagram 2) 일시정지 패널 표시
         if (_inGamePanelManager != null)
         {
             _inGamePanelManager.ShowPausePanel(true);
         }
-            
     }
 
     /// <summary>
@@ -154,11 +175,11 @@ public class GameManager : MonoBehaviour
         OnGameStateChanged?.Invoke(_currentState);
 
         // (SDS 4, Diagram 2) 모든 패널 닫기
-        if(_inGamePanelManager != null)
+        if (_inGamePanelManager != null)
             _inGamePanelManager.ShowPausePanel(false);
         // (보상 패널은 RewardManager가 직접 닫도록 합니다)
     }
-    
+
     /// <summary>
     /// Pause, Resume 토글 함수
     /// </summary>
@@ -172,8 +193,8 @@ public class GameManager : MonoBehaviour
         {
             ResumeGame();
         }
-    }   
-    
+    }
+
 
     /// <summary>
     /// (S3, A-2.b) PlayerManager가 Die()에서 호출합니다.
@@ -187,7 +208,7 @@ public class GameManager : MonoBehaviour
         OnGameStateChanged?.Invoke(_currentState);
 
         // (S3, D-2.c) 게임 오버 패널 표시
-        if(_inGamePanelManager != null)
+        if (_inGamePanelManager != null)
             _inGamePanelManager.ShowGameOverPanel(true);
     }
 
@@ -201,9 +222,9 @@ public class GameManager : MonoBehaviour
         _currentState = GameState.GameClear;
         Time.timeScale = 0f; // 게임 정지
         OnGameStateChanged?.Invoke(_currentState);
-        
+
         // (S3, D-2.c) 게임 클리어 패널 표시
-        if(_inGamePanelManager != null)
+        if (_inGamePanelManager != null)
             _inGamePanelManager.ShowGameClearPanel(true);
     }
 
@@ -234,22 +255,24 @@ public class GameManager : MonoBehaviour
         // 현재 씬을 다시 로드 (StartGame과 동일)
         StartGame();
     }
-    
+
     /// <summary>
     /// [병합] 게임 애플리케이션을 종료합니다. (메인메뉴 UI 등에서 사용)
     /// </summary>
     public void Shutdown()
     {
         Application.Quit();
-        
+
         // (참고: 유니티 에디터에서는 Quit()이 동작하지 않을 수 있습니다.)
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
-        #endif
+#endif
     }
+
     #endregion
 
     #region Private Methods
+
     /// <summary>
     /// (S2, B-1.b) PlayerManager의 OnPlayerLeveledUp 이벤트를 구독하여 호출됩니다.
     /// </summary>
@@ -257,18 +280,13 @@ public class GameManager : MonoBehaviour
     {
         // (SDS 4, Diagram 3)
         PauseGame(); // 게임을 멈추고
-        // PauseGame()의 일시정지창 비활성화
-        if (_inGamePanelManager != null)
-        {
-            _inGamePanelManager.ShowPausePanel(false);
-        }
 
         // (SDS 4, Diagram 3) RewardManager에게 보상 생성을 요청
         if (_rewardManager != null)
             _rewardManager.GenerateRewards();
-        
+
         // (SDS 4, Diagram 3) UI 패널 표시
-        if(_inGamePanelManager != null)
+        if (_inGamePanelManager != null)
             _inGamePanelManager.ShowRewardPanel(true);
     }
 
@@ -279,9 +297,9 @@ public class GameManager : MonoBehaviour
     private void HandleRewardFinished()
     {
         // (SDS 4, Diagram 3)
-        if(_inGamePanelManager != null)
+        if (_inGamePanelManager != null)
             _inGamePanelManager.ShowRewardPanel(false);
-        
+
         ResumeGame();
     }
 
@@ -294,7 +312,7 @@ public class GameManager : MonoBehaviour
         UnsubscribeInGameEvents();
 
         if (scene.name == IN_GAME_SCENE)
-        {  
+        {
             StartCoroutine(InitializeInGameManagers());
         }
         else if (scene.name == MAIN_MENU_SCENE)
@@ -303,14 +321,14 @@ public class GameManager : MonoBehaviour
             _currentState = GameState.Paused;
         }
     }
-    
+
     private System.Collections.IEnumerator InitializeInGameManagers()
     {
         yield return null;
         // 2. 인게임 씬이 로드되었으므로 상태 초기화
         _currentState = GameState.Playing;
-        _gameTime = 0f; 
-            
+        _gameTime = 0f;
+
         // 3. (컨벤션 1-1 예외) 씬 내의 매니저들을 "찾아서" 연결합니다.
         // DontDestroyOnLoad 객체는 인스펙터 참조가 씬 전환 시 끊기므로,
         // 씬 로드 시점에 FindAnyObjectByType(FindObjectOfType은 Obsolete 되었음!)을 사용하는 것이 유일한 방법입니다.
@@ -325,16 +343,16 @@ public class GameManager : MonoBehaviour
         {
             Debug.LogError("GameManager: InGameScene에서 필수 매니저(Player, Reward, InGamePanel)를 찾을 수 없습니다!");
         }
-            
+
         // 5. 씬 내부 매니저들의 이벤트를 "구독"합니다.
-        if(_playerManager != null)
+        if (_playerManager != null)
             _playerManager.OnPlayerLeveledUp += HandlePlayerLeveledUp;
-            
-        if(_rewardManager != null)
+
+        if (_rewardManager != null)
             _rewardManager.OnRewardProcessFinished += HandleRewardFinished;
 
         if (_inputManager != null)
-            _inputManager.OnPausePressed += HandlePauseInput;   
+            _inputManager.OnPausePressed += HandlePauseInput;
     }
 
     /// <summary>
@@ -347,15 +365,17 @@ public class GameManager : MonoBehaviour
         {
             _playerManager.OnPlayerLeveledUp -= HandlePlayerLeveledUp;
         }
+
         if (_rewardManager != null)
         {
             _rewardManager.OnRewardProcessFinished -= HandleRewardFinished;
         }
+
         if (_inputManager != null)
         {
             _inputManager.OnPausePressed -= HandlePauseInput;
         }
-
     }
+
     #endregion
 }
