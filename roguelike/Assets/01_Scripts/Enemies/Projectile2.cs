@@ -4,7 +4,7 @@ using UnityEngine;
 /// 적 몬스터가 발사하는 투사체
 /// 플레이어를 향해 직선으로 날아가며 충돌 시 데미지를 줍니다.
 /// </summary>
-public class Projectile : MonoBehaviour
+public class Projectile2 : MonoBehaviour
 {
     #region Serialized Fields
     

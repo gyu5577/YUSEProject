@@ -94,7 +94,7 @@ public class RangedMonster : Monster
 
         // 투사체 생성
         GameObject projObj = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
-        Projectile projectile = projObj.GetComponent<Projectile>();
+        Projectile2 projectile = projObj.GetComponent<Projectile2>();
 
         if (projectile != null)
         {
