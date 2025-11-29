@@ -257,9 +257,14 @@ public class GameManager : MonoBehaviour
     {
         // (SDS 4, Diagram 3)
         PauseGame(); // 게임을 멈추고
-        
+        // PauseGame()의 일시정지창 비활성화
+        if (_inGamePanelManager != null)
+        {
+            _inGamePanelManager.ShowPausePanel(false);
+        }
+
         // (SDS 4, Diagram 3) RewardManager에게 보상 생성을 요청
-        if(_rewardManager != null)
+        if (_rewardManager != null)
             _rewardManager.GenerateRewards();
         
         // (SDS 4, Diagram 3) UI 패널 표시

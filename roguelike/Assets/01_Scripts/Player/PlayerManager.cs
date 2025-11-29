@@ -33,6 +33,7 @@ public class PlayerManager : MonoBehaviour
     // (Sprint 2 추가) 레벨, 경험치, 골드 프로퍼티
     public int Level { get => _level; }
     public int CurrentExp { get => _currentExp; }
+    public int MaxExp { get => _maxExp; }
     public int Gold { get => _gold; }
 
     //위치

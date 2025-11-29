@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class RewardManager : MonoBehaviour
@@ -16,12 +17,19 @@ public class RewardManager : MonoBehaviour
     [SerializeField] private LootDataBase lootDataBase;
     [SerializeField] private InventoryManager inventoryManager;
 
+    // 일단 rewardPanel UI는 rewardManager에서 업데이트. 나중에 위치 변경 가능
+    [Header("RewardPanel UI")]
+    [SerializeField] private TextMeshProUGUI rerollCostText;
+    [SerializeField] private TextMeshProUGUI rerollCountText;
+    [SerializeField] private TextMeshProUGUI skipExpRatio;
     #endregion
 
     #region Private Fields
     private int _maxRerollCount = 2; // 테스트용 임시 최대 리롤 횟수
     private int _rerollCount = 0;
-    private int _rerollPrice = 100; // 테스트용 임시 리롤 비용
+    private int _baseRerollPrice = 100; // 테스트용 임시 리롤 비용
+    private int _rerollPrice = 0;
+    private float _skipExpRatio = 0.2f; // 테스트용 임시 경험치 보상 비율
     #endregion
 
     #region Unity LifeCycle
@@ -30,6 +38,8 @@ public class RewardManager : MonoBehaviour
         if (playerManager == null)
             Debug.LogError("RewardManager: PlayerManager가 인스펙터에 연결되지 않았습니다!");
 
+        _rerollPrice = _baseRerollPrice;
+        _rerollCount = _maxRerollCount;
     }
     #endregion
 
@@ -40,8 +50,14 @@ public class RewardManager : MonoBehaviour
     /// </summary>
 public void GenerateRewards()
 {
-    Debug.Log("RewardManager: GenerateRewards() 호출됨");
+    // 일단 rewardPanel UI는 rewardPanel UI는rewardManager에서 업데이트. 나중에 위치 변경 가능
+    UpdateRerollCost(_rerollPrice);
+    UpdateRerollCount(_rerollCount);
+    UpdateSkipExpRatio(_skipExpRatio);
 
+
+    Debug.Log("RewardManager: GenerateRewards() 호출됨");
+/*
     HashSet<UnityEngine.Object> rewards = new HashSet<UnityEngine.Object>(3);
 
     // 무한 루프 방지용 안전 장치 (보유 아이템이 없는데 뽑으려 할 때 등 대비)
@@ -129,7 +145,7 @@ public void GenerateRewards()
         }
         */
 
-
+        
     }
 
     /// <summary>
@@ -142,7 +158,9 @@ public void GenerateRewards()
         playerManager.AddEquipment(data);
 
         // 리롤 횟수 초기화
-        _rerollCount = 0;
+        _rerollCount = _maxRerollCount;
+        // 리롤 비용 초기화
+        _rerollPrice = _baseRerollPrice;
 
         OnRewardProcessFinished?.Invoke();
     }
@@ -159,7 +177,7 @@ public void GenerateRewards()
             return;
         }
 
-        if (_rerollCount >= _maxRerollCount)
+        if (_rerollCount <= 0)
         {
             Debug.Log("RewardManager: 리롤 횟수 부족 -> 리롤 불가");
             return;
@@ -168,8 +186,10 @@ public void GenerateRewards()
         // 골드 차감
         playerManager.GainGold(-_rerollPrice);
 
-        // 리롤 횟수 증가
-        _rerollCount++;
+        // 리롤 횟수 감소
+        _rerollCount--;
+        // 리롤 비용 증가
+        _rerollPrice = _rerollPrice * 2;
 
         // 보상 다시 생성
         GenerateRewards();
@@ -181,16 +201,64 @@ public void GenerateRewards()
     public void OnSkipPressed() 
     {
         // 경험치 보상 후 종료
-        playerManager.GainExp(100); // 테스트용 임시 경험치 보상
+        playerManager.GainExp((int)(playerManager.MaxExp * _skipExpRatio)); // 테스트용 임시 경험치 보상
 
         // 리롤 횟수 초기화
-        _rerollCount = 0;
+        _rerollCount = _maxRerollCount;
+        // 리롤 비용 초기화
+        _rerollPrice = _baseRerollPrice;
 
         OnRewardProcessFinished?.Invoke();
     }
     #endregion
 
     #region Private Methods
-    // ...
+    // 일단 rewardPanel UI는 rewardPanel UI는rewardManager에서 업데이트. 나중에 위치 변경 가능
+
+    /// <summary>
+    /// 리롤 비용 업데이트 함수
+    /// 리롤 버튼 누를 때 호출
+    /// </summary>
+    private void UpdateRerollCost(int amount)
+    {
+        if (rerollCostText != null)
+            rerollCostText.text = amount.ToString();
+
+        // 리롤 비용 지불 불가능 시 빨간색으로 표시
+        if (_rerollPrice > playerManager.Gold)
+        {
+            rerollCostText.color = Color.red;
+        }
+        else
+        {
+            rerollCostText.color = Color.white;
+        }
+    }
+
+    /// <summary>
+    /// 리롤 횟수 업데이트 함수
+    /// 리롤 버튼 누를 때 호출
+    /// </summary>
+    private void UpdateRerollCount(int amount)
+    {
+        if (rerollCountText != null)
+            rerollCountText.text = amount.ToString();
+
+        // 리롤 횟수 부족 시 빨간색으로 표시
+        if (_rerollCount > 0)
+        {
+            rerollCountText.color = Color.white;
+        }
+        else
+        {
+            rerollCountText.color = Color.red;
+        }
+    }
+
+    private void UpdateSkipExpRatio(float amount)
+    {
+        if (skipExpRatio != null)
+            skipExpRatio.text = $"{amount*100}%";
+    }
     #endregion
 }
