@@ -47,7 +47,6 @@ public class PlayerManager : MonoBehaviour
     [Header("Dependencies (Required)")]
     [SerializeField]
     private InputManager inputManager;
-    // [SerializeField] private ItemManager itemManager; // Removed
     [SerializeField]
     private InventoryManager inventoryManager; // (Sprint 2) 장비 관리자 추가
     
@@ -57,6 +56,7 @@ public class PlayerManager : MonoBehaviour
     #endregion
 
     #region Private Fields
+    private UpgradeManager _upgradeManager; // 업그레이드 매니저
     private Rigidbody2D _rb;
     private float _currentHp;
     private Animator _anime;
@@ -75,6 +75,8 @@ public class PlayerManager : MonoBehaviour
         _rb = GetComponent<Rigidbody2D>();
         _anime = GetComponent<Animator>();
         _sprite = GetComponent<SpriteRenderer>();
+        
+        _currentHp = stats.MaxHp;
     }
 
 
@@ -84,8 +86,9 @@ public class PlayerManager : MonoBehaviour
     }
     private void Start()
     {
-        _currentHp = stats.MaxHp;
-
+        // UpgradeManager로부터 보너스 적용
+        ApplyUpgradeBonuses();
+        
         // 안전 장치
         if (inputManager == null)
         {
@@ -282,7 +285,7 @@ public class PlayerManager : MonoBehaviour
         }
 
 
-            _anime.SetBool("IsWalk", isMoving);
+        _anime.SetBool("IsWalk", isMoving);
 
         if(input_x!=0)
         {
@@ -312,6 +315,41 @@ public class PlayerManager : MonoBehaviour
 
         // GameManager 등에게 레벨 업 사실 알림
         OnPlayerLeveledUp?.Invoke(); 
+    }
+    
+    /// <summary>
+    /// UpgradeManager로부터 보너스를 받아와 PlayerStats에 적용합니다.
+    /// </summary>
+    private void ApplyUpgradeBonuses()
+    {
+        Debug.Log("[PlayerManager] ApplyUpgradeBonuses() 시작");
+        
+        if (_upgradeManager == null)
+        {
+            _upgradeManager = UpgradeManager.Instance;
+        }
+    
+        if (_upgradeManager == null)
+        {
+            Debug.LogWarning("PlayerManager: UpgradeManager를 찾을 수 없습니다. 보너스가 적용되지 않습니다.");
+            return;
+        }
+    
+        Debug.Log($"[PlayerManager] UpgradeManager.AvailableUpgrades.Count = {_upgradeManager.AvailableUpgrades.Count}");
+        
+        // 모든 UpgradeType에 대해 보너스 적용
+        foreach (UpgradeType type in System.Enum.GetValues(typeof(UpgradeType)))
+        {
+            float bonus = _upgradeManager.GetStatBonus(type);
+            Debug.Log($"[PlayerManager] {type} 보너스 조회 결과 = {bonus}");
+            if (bonus > 0)
+            {
+                stats.SetBonus(type, bonus);
+                Debug.Log($"PlayerManager: {type} 보너스 적용 (+{bonus})");
+            }
+        }
+        
+        Debug.Log("[PlayerManager] ApplyUpgradeBonuses() 완료");
     }
 
  

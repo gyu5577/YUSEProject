@@ -512,7 +512,7 @@ PrefabInstance:
     - target: {fileID: 6711421060320007765, guid: 31f97e8783e65a640b3cdd24282d44d1, type: 3}
       propertyPath: inventoryManager
       value: 
-      objectReference: {fileID: 6697377776466563932}
+      objectReference: {fileID: 6697377776466563931}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -562,7 +562,7 @@ PrefabInstance:
     - target: {fileID: 455124095117590339, guid: 5dd39accac0eb714e9280a94d5e671c0, type: 3}
       propertyPath: inventoryManager
       value: 
-      objectReference: {fileID: 6697377776466563932}
+      objectReference: {fileID: 6697377776466563931}
     - target: {fileID: 455124095117590339, guid: 5dd39accac0eb714e9280a94d5e671c0, type: 3}
       propertyPath: itemSlots.Array.size
       value: 3
@@ -695,6 +695,14 @@ PrefabInstance:
       propertyPath: gameOverPanel
       value: 
       objectReference: {fileID: 9127470290560610873}
+    - target: {fileID: 5379732964203942958, guid: 5dd39accac0eb714e9280a94d5e671c0, type: 3}
+      propertyPath: weaponParent
+      value: 
+      objectReference: {fileID: 1690861174107643620}
+    - target: {fileID: 5379732964203942958, guid: 5dd39accac0eb714e9280a94d5e671c0, type: 3}
+      propertyPath: playerManager
+      value: 
+      objectReference: {fileID: 89167197}
     - target: {fileID: 5464171322958516330, guid: 5dd39accac0eb714e9280a94d5e671c0, type: 3}
       propertyPath: spawnInterval
       value: 1
@@ -731,9 +739,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25e941d3686b5e7458a42982b6bfa4b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &6697377776466563932 stripped
+--- !u!114 &6697377776466563931 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5661420617346070450, guid: 5dd39accac0eb714e9280a94d5e671c0, type: 3}
+  m_CorrespondingSourceObject: {fileID: 5379732964203942958, guid: 5dd39accac0eb714e9280a94d5e671c0, type: 3}
   m_PrefabInstance: {fileID: 6697377776466563929}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}

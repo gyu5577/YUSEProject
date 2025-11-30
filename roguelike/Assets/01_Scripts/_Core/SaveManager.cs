@@ -1,16 +1,5 @@
 using UnityEngine;
 
-public enum StatType
-{
-    Hp,                 // 체력
-    Speed,              // 이동 속도
-    MagnetRange,        // 자석 범위
-    CriticalChance,     // 치명타 확률
-    CriticalDamage,     // 치명타 피해
-    ExpMultiplier,      // 경험치 획득량
-    GoldMultiplier      // 골드 획득량
-}
-
 public static class SaveManager
 {
     #region Constants (Key Definitions)
@@ -61,24 +50,28 @@ public static class SaveManager
     #endregion
     
     #region Public Methods (Upgrade Levels)
-    // 특정 능력치 강화 레벨 저장
-    public static void SaveUpgradeLevel(StatType statType, int level)
+    /// <summary>
+    /// 특정 능력치 강화 레벨 저장
+    /// </summary>
+    public static void SaveUpgradeLevel(UpgradeType upgradeType, int level)
     {
-        string key = GetUpgradeKey(statType);
+        string key = GetUpgradeKey(upgradeType);
         PlayerPrefs.SetInt(key, level);
     }
     
-    // 특정 능력치 강화 레벨 불러옴
-    public static int LoadUpgradeLevel(StatType statType)
+    /// <summary>
+    /// 특정 능력치 강화 레벨 불러옴
+    /// </summary>
+    public static int LoadUpgradeLevel(UpgradeType upgradeType)
     {
-        string key = GetUpgradeKey(statType);
+        string key = GetUpgradeKey(upgradeType);
         // 기본 레벨은 0
         return PlayerPrefs.GetInt(key, 0);
     }
     
-    private static string GetUpgradeKey(StatType statType)
+    private static string GetUpgradeKey(UpgradeType upgradeType)
     {
-        return $"{KEY_UPGRADE_PREFIX}{statType}";
+        return $"{KEY_UPGRADE_PREFIX}{upgradeType}";
     }
     #endregion
 

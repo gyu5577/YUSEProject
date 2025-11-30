@@ -132,10 +132,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   inputManager: {fileID: 4324634685302692466, guid: d5306122b12066b48b32c3bb4de803aa, type: 3}
-  itemManager: {fileID: 0}
+  inventoryManager: {fileID: 2395662797616988758, guid: 8d17b1f4642f49f40ab4efdf929e5afa, type: 3}
+  upgradeManager: {fileID: 0}
   stats:
     maxHp: 100
     speed: 5
+    attackDamageMult: 1
+    attackSpeedMult: 1
+    cooldownMult: 1
+    magnetRange: 2
+    critChance: 5
+    critDamageMult: 1.5
+    expMult: 1
+    goldMult: 1
+    damageReductionMult: 0
 --- !u!58 &5670197590616524391
 CircleCollider2D:
   m_ObjectHideFlags: 0
