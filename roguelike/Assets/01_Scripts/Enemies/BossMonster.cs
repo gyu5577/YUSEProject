@@ -6,14 +6,8 @@ public class BossMonster : Monster
     {
         base.Start();
 
-        // 테스트로 알아보기 쉽게 크기를 키우고 빨간색으로 변경
+        // 테스트로 알아보기 쉽게 크기를 키움
         transform.localScale = Vector3.one * 2.0f; // 2배 커짐
-        
-        SpriteRenderer sr = GetComponent<SpriteRenderer>();
-        if (sr != null)
-        {
-            sr.color = Color.red; // 빨간색
-        }
     }
     
     public override void Move(Vector2 targetPosition)

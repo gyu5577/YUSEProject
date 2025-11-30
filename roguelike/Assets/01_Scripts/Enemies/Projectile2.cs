@@ -47,7 +47,6 @@ public class Projectile2 : MonoBehaviour
     /// <summary>
     /// 투사체를 발사할 때 호출, 목표 방향 설정
     /// </summary>
-    /// <param name="target">추적할 타겟 (일반적으로 플레이어)</param>
     public void Init(Transform target)
     {
         _target = target;
@@ -59,24 +58,61 @@ public class Projectile2 : MonoBehaviour
             
             _moveDirection = (targetPos - currentPos).normalized;
             
-            // 투사체 스프라이트 방향
-            float angle = Mathf.Atan2(_moveDirection.y, _moveDirection.x) * Mathf.Rad2Deg;
-            transform.rotation = Quaternion.Euler(0f, 0f, angle + 270);
+            UpdateRotation();
         }
         else
         {
             Destroy(gameObject);
         }
     }
+
+    /// <summary>
+    /// 방향 벡터로 초기화
+    /// </summary>
+    public void Init(Vector2 direction)
+    {
+        _moveDirection = direction.normalized;
+        UpdateRotation();
+    }
+
+    /// <summary>
+    /// 투사체 크기 설정
+    /// </summary>
+    public void SetSize(float scale)
+    {
+        transform.localScale = Vector3.one * scale;
+    }
+
+    /// <summary>
+    /// 투사체 속도 설정
+    /// </summary>
+    public void SetSpeed(float newSpeed)
+    {
+        speed = newSpeed;
+    }
+
+    /// <summary>
+    /// 투사체 데미지 설정
+    /// </summary>
+    public void SetDamage(float newDamage)
+    {
+        damage = newDamage;
+    }
     
     #endregion
     
     #region Private Methods
+
+    private void UpdateRotation()
+    {
+        // 투사체 스프라이트 방향
+        float angle = Mathf.Atan2(_moveDirection.y, _moveDirection.x) * Mathf.Rad2Deg;
+        transform.rotation = Quaternion.Euler(0f, 0f, angle + 270);
+    }
     
     /// <summary>
     /// 플레이어와 충돌시 데미지 후 파괴
     /// </summary>
-    /// <param name="other">충돌한 콜라이더</param>
     private void OnTriggerEnter2D(Collider2D other)
     {
         PlayerManager player = other.GetComponent<PlayerManager>(); 
